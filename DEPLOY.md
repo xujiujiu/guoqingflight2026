@@ -6,15 +6,15 @@
 ## 文件清单
 | 路径 | 作用 | 改动频率 |
 |---|---|---|
-| `index.html` | 默认文档跳转，避免复制两份内容造成漂移 | 几乎不改 |
-| `flights.html` | 报告页面与全部样式 | 改版式时 |
-| `flights-app.js` | 报告逻辑：矩阵/曲线/走势/表格 | 改交互时 |
-| `assets/flight-data.js` | 机票数据归一层（按城市合并、机场码→城市码、地图渲染） | 改口径时 |
+| `index.html` | **报告页面本体**：样式、数据归一层、报告逻辑全部内联，单文件即可维护 | 改版式/交互时 |
 | `assets/echarts.min.js` | 图表引擎（已本地化，6.1.0，Apache-2.0） | 升级时 |
 | `assets/fonts.css` + `assets/fonts/*.woff2` | 本地字体（拉丁子集 6 档，约 135KB） | 换字体时 |
 | `assets/cities-geo.js` | 370 个地级单元边界 GeoJSON（含机场坐标落位所需质心） | 基本不变 |
-| `data/flight-all.js` | **主数据**：全部统计数字均由 flights-app.js 的 head() 从数据实算后填入与 15 天日历 | 每次重采 |
+| `data/flight-all.js` | **主数据**：全部统计数字均由 `index.html` 的 head() 从数据实算后填入与 15 天日历 | 每次重采 |
 | `data/flight-mtop.js` | 首批数据（含 flyai 可售往返打包价，用于对照） | 每次重采 |
+
+> 原先的 `flights.html` / `flights-app.js` / `assets/flight-data.js` 三个文件已合并进 `index.html`，
+> 目的是让托管方只需摆一个文件；两个内联块开头各留了注释说明来源与改动点。
 
 ## 外部依赖：已归零
 字体已本地化到 `assets/fonts/`（Archivo 3 档 + IBM Plex Mono 3 档，共 6 个 woff2、约 135KB），
@@ -29,7 +29,7 @@
 ## 缓存建议
 两个 `data/*.js` 是**取数时刻的快照**（页脚 `#meta` 会显示采集时间）。重采后必须让客户端拿到新版：
 
-- 首选**文件名带版本**：`flight-all.v20260924.js`，同步改 `flights.html` 里的 `<script src>`；
+- 首选**文件名带版本**：`flight-all.v20260924.js`，同步改 `index.html` 里的 `<script src>`；
 - 或对 `data/` 设 `Cache-Control: no-cache`，静态资源 `assets/` 可长缓存。
 
 ## 数据口径（部署说明里建议保留）
@@ -40,5 +40,5 @@
 
 ## 验证
 ```
-cd web && python3 -m http.server 8080   # 打开 http://localhost:8080
+python3 -m http.server 8080      # 在本包根目录执行，打开 http://localhost:8080
 ```
