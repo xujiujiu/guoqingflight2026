@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>杭州出发·假期机票价格</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+/* ═══ 视觉层：现代咨询商务风 ═══
+   配色比例 主色(深蓝) 60% / 灰白 30% / 强调(橙) 10%
+   结构色不受多序列校验约束；折线用参考调色板已验的 5 个色相
+   sequential 六档：对白底最浅 1.59:1、单调递减、相邻档 1.37–1.68:1
+   分档基准一律先剔除一个最高与一个最低（见 tierRange），极端值只染满自己那档 */
+:root{
+  color-scheme: light;
+  --navy:#0f2a47; --navy2:#1f4e79; --navy3:#2f5f93;
+  --accent:#c65911; --accent-w:#e8b48a;
+  --page:#ffffff; --surface:#ffffff; --surface2:#f7f8fa; --surface3:#eef1f5;
+  --ink:#111d2b; --ink2:#4a5768; --muted:#8a94a3;
+  --edge:#dfe3e9; --hair:#eceef2; --ring:#dfe3e9;
+  --axis:#c8cfd8; --grid:#eef0f3; --chip:#f2f4f7; --nodata:#f4f5f7;
+  /* 多序列折线色：参考调色板 light 档前 5 槽，校验器 adjacent 全 PASS */
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#eda100;
+  --s6:#1baf7a; --s7:#4a3aa7; --s8:#e34948;
+  /* sequential 价格色带（浅→深＝便宜→贵） */
+  --w1:#b9d0e7; --w2:#8fb4d8; --w3:#5f8fc0; --w4:#3a6ea5; --w5:#1f4e79; --w6:#0f2a47;
+  --good:#1baf7a; --warn:#eda100; --crit:#c0392b;
+  --sans:"Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --disp:"Archivo","Noto Sans SC",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;overflow-x:clip}
+/* 数字对齐一律交给 --mono 等宽字体本身：不要再加 font-variant-numeric:tabular-nums——
+   本页中文由系统字体兜底（assets/fonts.css 只本地化了拉丁子集），
+   该属性作用到后备字体上会让 Chrome 直接不画中文字形，表现为文字凭空消失。 */
+/* 只允许图表卡片内部横滚，页面本身不得横向滚动 */
+.wrap,.rh .in{min-width:0}
+.wrap{max-width:1180px;padding-inline:28px;margin:0 auto}
+a{color:var(--navy3)} b{font-weight:700;color:var(--navy)}
+
+/* ── 页眉 running head ── */
+.rh{border-bottom:2px solid var(--navy);padding-block:calc(10px + env(safe-area-inset-top,0px)) 10px}
+.rh .in{max-width:1180px;margin:0 auto;padding-inline:28px;display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.rh .org{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--navy)}
+.rh .org em{font-style:normal;color:var(--accent)}
+.rh .meta{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.rh .meta span{white-space:nowrap}
+.rh .meta b{color:var(--ink2);font-weight:500}
+
+/* ── 标题区：左侧标题 + 右侧关键指标 ── */
+.masthead{padding-block:44px 30px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:36px;align-items:end}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:var(--disp);font-weight:700;font-size:clamp(23px,3.6vw,40px);line-height:1.18;
+   margin:.34em 0 .34em;letter-spacing:-.015em;color:var(--navy);overflow-wrap:anywhere}
+.dek{font-size:15px;color:var(--ink2);margin:0;max-width:62ch;overflow-wrap:anywhere}
+.dek b{color:var(--navy)}
+.keynums{border-top:1px solid var(--edge)}
+.kn{display:flex;justify-content:space-between;align-items:baseline;gap:14px;min-width:0;padding:9px 0;border-bottom:1px solid var(--hair)}
+.kn .l{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.kn .v{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--navy)}
+.kn .v u{text-decoration:none;font-size:11px;color:var(--muted);margin-left:3px}
+
+/* ── 章节：编号 + 标题 + hairline ── */
+section{padding-block:38px 0}
+.sech{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--navy);padding-bottom:10px}
+.secno{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.06em}
+h2{font-family:var(--disp);font-size:clamp(18px,2.4vw,24px);font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:14px;max-width:78ch;margin:14px 0 0}
+
+/* ── 结论条（so what）── */
+.callout{background:var(--surface2);border-left:3px solid var(--accent);padding:13px 18px;margin:18px 0 20px}
+.callout .lab{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+.callout p{margin:0;font-size:14.5px;color:var(--ink);line-height:1.6}
+.callout b{color:var(--navy)}
+
+/* ── 图表容器：白底、细边、无阴影堆叠 ── */
+.card{background:var(--surface);border:1px solid var(--edge);border-top:2px solid var(--navy);margin-top:20px}
+#chartfail{display:none;margin-top:16px;padding:13px 16px;background:#fdf6f1;border:1px solid var(--accent-w);border-left:3px solid var(--accent);font-size:13px;color:var(--ink2)}
+.chart{width:100%;height:520px;min-height:200px}
+.chart.tall{height:740px}
+.key{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--ink2);
+  padding:12px 16px 14px;flex-wrap:wrap;border-top:1px solid var(--hair)}
+.key .sw{width:26px;height:11px}
+.key .nd{width:26px;height:11px;background:var(--nodata);border:1px dashed var(--axis)}
+.key .ql{color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);padding:12px 2px 0;line-height:1.75;max-width:96ch}
+.note b{color:var(--ink2)}
+
+/* ── 结论卡 ── */
+.stat{font-family:var(--mono);font-size:12px;color:var(--ink2);background:var(--surface2);
+  border:1px solid var(--edge);padding:11px 14px;margin:22px 0 0;
+  display:flex;flex-wrap:wrap;gap:4px 20px}
+.stat b{color:var(--navy)}
+/* 数据来源条拆成「标签+值」小项，窄屏逐条堆叠，不再靠横向滚动读一半丢一半 */
+.stat .mi{display:inline-flex;align-items:baseline;gap:7px;min-width:0}
+.stat .mi i{font-style:normal;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.stat .mi b{font-weight:600;overflow-wrap:anywhere}
+.verdicts{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:0;
+  border:1px solid var(--edge);border-top:3px solid var(--accent);margin:16px 0 0}
+.vd{padding:15px 17px;border-right:1px solid var(--hair)}
+.vd:last-child{border-right:0}
+.vd .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.vd .p{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.25;
+  margin:5px 0 2px;color:var(--navy)}
+.vd .d{font-size:12px;color:var(--ink2);line-height:1.5}
+.vd:first-child .p{color:var(--accent)}
+
+/* ── 假期日历条 ── */
+.grid16{display:flex;gap:5px;overflow-x:auto;padding:4px 0 8px;margin-top:18px}
+.dc{flex:1 1 0;min-width:58px;text-align:center;padding:9px 4px;background:var(--surface);
+  border:1px solid var(--edge);border-top:3px solid var(--axis);font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.dc b{display:block;font-size:17px;font-weight:600;color:var(--ink2);line-height:1.25}
+.dc.holiday{border-top-color:var(--navy);background:var(--surface3)}
+.dc.holiday b{color:var(--navy)}
+.dc.leave{border-top-color:var(--accent);background:#fdf6f1}
+.dc.leave b{color:var(--accent)}
+.legendrow{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--ink2);margin-top:14px}
+.legendrow i{display:inline-block;width:10px;height:10px;border-radius:1px;margin-right:6px;border:1px solid rgba(0,0,0,.08)}
+
+/* ── 控件 ── */
+.ctrls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0 0}
+.ctrls label{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.07em;
+  text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.tg{font-family:var(--sans);font-size:13px;padding:6px 14px;cursor:pointer;
+  border:1px solid var(--edge);background:var(--surface);color:var(--ink2);border-radius:2px}
+.tg[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:500}
+.tg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font-family:var(--mono);font-size:12.5px;padding:6px 8px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--edge);border-radius:2px}
+select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pill{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink2);
+  background:var(--chip);border:1px solid var(--edge);padding:5px 9px;border-radius:2px;white-space:nowrap}
+.pill.warn{background:#fdf6f1;border-color:var(--accent-w);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:18px 0 0}
+.chip{font-family:var(--mono);font-size:11.5px;padding:4px 10px;border:1px solid var(--edge);
+  background:var(--surface);color:var(--ink2);cursor:pointer;border-radius:2px}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
+.chip:hover{border-color:var(--navy3)}
+
+/* ── 城市选择：移动端可搜索下拉多选（窄屏替换 chip 墙）──
+   刻意不用「button/label 里塞 flex + 子 span 承载文字」，也不用 ::after 造假勾选框：
+   这两种写法一旦被引擎忽略，吞掉的正是城市名。改为块级行 + 原生 checkbox 换皮，
+   文字始终是元素的直接文本节点。 */
+.cp{display:none;margin:18px 0 0}
+.cpopts{margin:0 0 8px}
+.cptag{display:inline-block;font-family:var(--mono);font-size:11.5px;line-height:1.5;
+  margin:0 6px 6px 0;padding:4px 9px;border:1px solid var(--navy);background:var(--navy);
+  color:#fff;border-radius:2px}
+.cptag em{font-style:normal;margin-left:7px;opacity:.72;cursor:pointer}
+.cpbtn{display:block;position:relative;width:100%;font-family:var(--mono);font-size:12.5px;line-height:1.5;
+  padding:9px 30px 9px 11px;background:var(--surface);border:1px solid var(--edge);border-radius:2px;
+  color:var(--ink);text-align:left;cursor:pointer;-webkit-appearance:none;appearance:none}
+.cpbtn .cap{color:var(--muted);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase}
+.cpbtn .sm{display:block;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpbtn .cv{position:absolute;right:11px;top:9px;color:var(--muted);font-size:10px}
+.cpbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cpanel{margin-top:8px;border:1px solid var(--edge);border-top:2px solid var(--navy);background:var(--surface)}
+.cpanel[hidden]{display:none}
+.cpq{display:block;width:100%;font-family:var(--sans);font-size:14px;padding:10px 11px;color:var(--ink);
+  background:var(--surface2);border:0;border-bottom:1px solid var(--hair);border-radius:0;-webkit-appearance:none;appearance:none}
+.cpq:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.cplist{max-height:296px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cpi{display:block;padding:10px 11px;border-bottom:1px solid var(--hair);background:var(--surface);
+  color:var(--ink);font-size:13.5px;line-height:1.6;cursor:pointer}
+.cpi:last-child{border-bottom:0}
+.cpi[aria-checked="true"]{background:var(--surface2)}
+.cpi:focus-within{outline:2px solid var(--accent);outline-offset:-2px}
+/* 原生 checkbox 换皮：appearance:none 后自己画框与勾，不再叠一个假方框 span */
+.cpi input[type=checkbox]{-webkit-appearance:none;appearance:none;box-sizing:border-box;
+  display:inline-block;vertical-align:-2px;margin:0 9px 0 0;width:15px;height:15px;
+  border:1px solid var(--axis);border-radius:2px;background:var(--surface)}
+.cpi input[type=checkbox]:checked{background:var(--navy);border-color:var(--navy)}
+.cpi input[type=checkbox]:checked::after{content:"";display:block;width:5px;height:9px;margin:-1px auto 0;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.cpi .nm{color:var(--navy);font-weight:500;font-family:var(--sans)}
+.cpi .en{margin-left:7px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.cpi .cd{margin-left:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--muted)}
+.cpnone{padding:16px 12px;font-size:12.5px;color:var(--muted)}
+.cpfoot{display:flex;align-items:baseline;gap:10px;padding:8px 11px;border-top:1px solid var(--hair);
+  background:var(--surface2);font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:1.5}
+.cprst{margin-left:auto;flex:none;font-family:var(--mono);font-size:10.5px;background:var(--surface);
+  border:1px solid var(--edge);color:var(--ink2);padding:4px 9px;border-radius:2px;cursor:pointer}
+
+/* ── 表格：深蓝表头白字 ── */
+.tw{overflow-x:auto;border:1px solid var(--edge);background:var(--surface);max-height:640px;overflow-y:auto;margin-top:18px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:9px 13px;text-align:right;white-space:nowrap;
+  font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--hair)}
+th:first-child,td:first-child{text-align:left;font-family:var(--sans);font-size:13.5px;color:var(--navy);font-weight:500}
+thead th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:#fff;background:var(--navy);border-bottom:2px solid var(--navy);position:sticky;top:0;z-index:2}
+tbody tr:nth-child(even) td{background:var(--surface2)}
+tbody tr:hover td{background:#eaf2fb}
+td.hi{color:var(--accent);font-weight:600}
+
+footer{padding-block:34px 56px;color:var(--muted);font-size:12px;margin-top:44px;border-top:1px solid var(--edge)}
+footer b{color:var(--ink2)} footer p{max-width:92ch}
+code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(--navy2);padding:1px 5px;border-radius:2px}
+
+/* ── 移动端：12 栏塌成单列，宽图靠横向滚动保住可读尺寸 ── */
+@media (max-width:900px){
+  .masthead{grid-template-columns:1fr;gap:26px;padding-block:32px 22px;align-items:start}
+  .keynums{border-top:1px solid var(--edge)}
+}
+@media (max-width:760px){
+  body{font-size:14px}
+  .wrap,.rh .in{padding-inline:15px}
+  .masthead{padding-block:26px 18px}
+  h1{font-size:25px}
+  section{padding-block:30px 0}
+  .chart{height:400px} .chart.tall{height:500px}
+  .verdicts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vd{border-right:0;border-bottom:1px solid var(--hair)}
+  .vd .p{font-size:21px}
+  .sub{font-size:13px} .note{font-size:11.5px} .key{font-size:10px;padding:10px 12px 12px}
+  .callout{padding:11px 14px;font-size:13px}
+  /* 页眉数据来源：整行移到标题下，每条一格，窄屏自行折行——不再挤成一串被裁掉 */
+  .rh .meta{margin-left:0;width:100%;display:grid;gap:2px 14px;
+    grid-template-columns:repeat(auto-fit,minmax(0,1fr));font-size:10px;letter-spacing:.04em}
+  .rh .meta span{white-space:normal;min-width:0;overflow-wrap:anywhere;line-height:1.55}
+  /* 只有地图保留横滚（它本身支持双指缩放）；03/04/05 改为按视口自适应，不滑就能看全 */
+  #fMap{min-width:540px}
+  .card{overflow-x:auto}
+  /* 01 假期日历：15 格按视口等分，右端不再被推出去；周几收成单字腾出宽度 */
+  .grid16{gap:3px}
+  .dc{min-width:0;flex:1 1 0;padding:7px 1px;font-size:9px}
+  .dc b{font-size:14px}
+  .ctrls{gap:8px}
+  .ctrls label{flex:1 1 auto}
+  .ctrls select{flex:1;min-width:0;font-size:12px;padding:7px 6px}
+  .ctrls .tg,.ctrls .pill{flex:1 1 100%}
+  /* chip 墙在窄屏换成可搜索下拉多选 */
+  #chips{display:none}
+  .cp{display:block}
+  /* 数据来源条：一项一行，标签与值两端对齐 */
+  .stat{flex-direction:column;gap:0;padding:6px 14px 9px}
+  .stat .mi{width:100%;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px solid var(--hair)}
+  .stat .mi:last-child{border-bottom:0}
+  .stat .mi b{text-align:right}
+}
+@media (max-width:400px){ .verdicts{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="rh"><div class="in">
+  <span class="org">Holiday Airfare Study<em> · </em>HGH Origin</span>
+  <div class="meta">
+    <span>源 <b>飞猪 mtop v3.0</b></span>
+    <span>机场码 <b id="hCodes">—</b></span>
+    <span>城市 <b id="hCity">—</b></span>
+    <span>有价 <b id="hPriced">—</b></span>
+    <span>窗口 <b id="hWin">—</b></span>
+  </div>
+</div></div>
+
+<div class="wrap">
+<div id="chartfail"><b>图表引擎未加载。</b>本页图表依赖同目录 <code>assets/echarts.min.js</code>，当前未能取得——文字结论与价格表不受影响，补齐该文件后刷新即可。</div>
+
+<header class="masthead">
+  <div>
+    <div class="kicker">2026 中秋 · 国庆出行季</div>
+    <h1>杭州出发假期机票：哪天走，哪天回</h1>
+    <p class="dek">覆盖 <b><span id="nC">—</span> 个中国民航机场码</b>（OpenFlights 全量，剔除脏码），同城多机场归并取最低后为 <b><span id="nU">—</span> 个城市</b>，其中 <b><span id="nP">—</span> 个城市</b>取到杭州直飞报价，逐城采集「出发日 × 返程日」每日最低价。</p
+  </div>
+  <div class="keynums">
+    <div class="kn"><span class="l">有报价城市</span><span class="v"><span id="kPriced">—</span><u>城</u></span></div>
+    <div class="kn"><span class="l">价格带（往返）</span><span class="v" id="kBand">—</span></div>
+    <div class="kn"><span class="l">去程峰谷差</span><span class="v"><span id="kOut">—</span><u>%</u></span></div>
+    <div class="kn"><span class="l">返程峰谷差</span><span class="v"><span id="kBack">—</span><u>%</u></span></div>
+  </div>
+</header>
+
+<section>
+  <div class="sech"><span class="secno">01</span><h2>假期日历：哪几天在休，哪几天要请</h2></div>
+  <div class="callout"><span class="lab">本节结论</span>
+    <p>中秋与国庆之间只隔 <b>3 个工作日</b>，请假即拼成 13 天连续假期——价格曲线因此呈<b>双峰</b>而非单峰，两个峰之间的 9/28–30 反而是可利用了窗口。</p></div>
+  <div class="legendrow">
+    <span><i style="background:var(--surface3);border-top:3px solid var(--navy)"></i>法定假期</span>
+    <span><i style="background:#fdf6f1;border-top:3px solid var(--accent)"></i>请假日 9/28–30</span>
+    <span><i style="background:var(--surface);border-top:3px solid var(--axis)"></i>工作日</span>
+  </div>
+  <div class="grid16" id="daycal"></div>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">02</span><h2>可达城市地图：哪儿贵、哪儿便宜</h2></div>
+  <div class="callout"><span class="lab">本节结论</span>
+    <p>价格本质是里程的函数，色带呈以杭州为圆心的<b>同心扩散</b>。有信息量的是<b>偏离这个梯度</b>的城市——同距离却明显更贵，意味着绕行或航线稀缺。</p></div>
+  <p class="sub">底色为地级单元，圆点为各城机场坐标；颜色＝下方所选日期的<b>往返总价</b>，浅→深＝便宜→贵。这组日期只驱动本图。</p>
+  <div class="ctrls">
+    <label>出发 <select id="depSel" aria-label="地图出发日期"></select></label>
+    <label>返回 <select id="backSel" aria-label="地图返程日期"></select></label>
+    <span class="pill" id="mapTrip">—</span>
+  </div>
+  <div class="card"><div id="fMap" class="chart tall"></div><div class="key" id="fMapKey"></div></div>
+  <p class="note" id="fMapNote"></p>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">03</span><h2>去程日 × 返程日：全国中位往返价矩阵</h2></div>
+  <div class="callout"><span class="lab">本节结论</span>
+    <p>把这张表当成<b>选日期工具</b>用：横选出发日、纵选返回日，交叉格即该组合下的全国截尾中位往返价。国庆中段出发普遍低于节前与节末。</p></div>
+  <p class="sub">每格＝该「去程日 × 返程日」组合下全国城市的<b>往返价中位数</b>。只有左上三角是合法域，颜色<b>越深越贵</b>。</p>
+  <div class="card"><div id="matrix" class="chart tall"></div><div class="key" id="matrixKey"></div></div>
+  <p class="note" id="matrixNote"></p>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">04</span><h2>全国中位价随日期变化</h2></div>
+  <div class="callout"><span class="lab">本节结论</span>
+    <p>返程线整体压在去程线之上——<b>回程才是假期的价格瓶颈</b>。同一趟行程，能调整返程日比调整出发日省得多。</p></div>
+  <p class="sub">蓝线＝该日杭州飞出的全国中位<b>单程</b>价，绿线＝飞回杭州；底色为法定假期。不画合计线（那是两线相加的派生量），往返总价见 02、03。</p>
+  <div class="card"><div id="dateCurve" class="chart"></div></div>
+  <p class="note" id="dateNote"></p>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">05</span><h2>单个城市的 15 天价格走势</h2></div>
+  <div class="callout"><span class="lab">本节结论</span>
+    <p>比绝对高低更有用的是<b>曲线形状</b>：有的城市节前即达峰，有的国庆中段才最高——形状差异反映该航线是<b>商务线还是旅游线</b>。</p></div>
+  <p class="sub">纵值＝该城当日<b>单程</b>最低价，随 tab 切换去程／返程，两者永不并画。城市按<b>拼音</b>排序：电脑端点标签，手机端可搜索多选。</p>
+  <div class="chips" id="chips" role="group" aria-label="选择对比城市"></div>
+  <div class="cp" id="cpBox"></div>
+  <div class="ctrls" id="calMode" role="group" aria-label="选择价格方向"></div>
+  <div class="card"><div id="cityCal" class="chart"></div></div>
+  <p class="note" id="cityNote"></p>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">06</span><h2>可达城市全量价格表</h2></div>
+  <p class="sub">按本节日期重算，同时驱动 03 十字线与 07 卡片（02 地图另有独立日期）。空值＝该城该日无报价，不以邻日顶替。</p>
+  <div class="ctrls">
+    <label>出发 <select id="depSel2" aria-label="表格出发日期"></select></label>
+    <label>返回 <select id="backSel2" aria-label="表格返程日期"></select></label>
+    <button class="tg" id="onlyTrip" aria-pressed="false" type="button">只看往返总价</button>
+  </div>
+  <div class="tw"><table id="tbl"></table></div>
+  <p class="note" id="tblNote"></p>
+</section>
+
+<section>
+  <div class="sech"><span class="secno">07</span><h2>数据概览</h2></div>
+  <div class="stat" id="meta"><span class="mi"><i>状态</i><b>数据加载中…</b></span></div>
+  <div class="verdicts" id="verdicts"></div>
+</section>
+
+<footer id="foot">
+  <p><b>口径</b> 价格为「去程该日单程最低价 + 返程该日单程最低价」的<b>理论组合</b>，含基建燃油，可能跨承运人，不保证能作为一张往返票按此总价购买。飞猪另有同商家可售往返打包价，通常高出 5–24%。</p>
+  <p><b>统计</b> 全报告中位数与按色深浅分级处，口径统一为<b>截尾</b>：先剔掉一个最高、一个最低（样本 ≤3 不裁）再统计或等分色带，免得个别极端值独占一档、把中间差异糊成同色；被剔的极值仍照常画出，只贴两端色档。</p>
+  <p><b>来源</b> 飞猪 mtop <code>getCheapestPriceCalendar</code> v3.0，浏览器会话实时取数；候选集为 OpenFlights 公开机场库中全部中国民航 IATA 码（有效码数与城市数见页眉，均由数据实算）。接口返回 0 或缺条目即记为无报价，不做推算。机场码 <code>PEK/XIY/PVG</code> 返回 0 而城市码 <code>BJS/SIA/SHA</code> 有价者，已按城市码补查。</p>
+  <p><b>配色校验</b> 结构色为主色深蓝 60%、灰白 30%、强调橙 10%。多序列折线取已验证色板前 5 槽（色盲相邻分离 ≥8、正常视觉 ≥15）。价格色带六档明度单调、最浅档对白底 1.59:1，「无报价」另用近空白灰加虚线描边，避免与最低价档混淆。</p>
+  <p id="stamp"></p>
+</footer>
+</div>
+
+<script src="assets/echarts.min.js"></script>
+<script src="assets/cities-geo.js"></script>
+<script src="data/flight-all.js"></script>
+<script src="data/flight-mtop.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   数据归一层 + 地图渲染
+   原为 assets/flight-data.js（主报告与机票报告共用），为使本页可单文件维护而内联。
+   改动点：分档基准改为「截尾区间」（剔除一个最高与一个最低后再分级），
+           越界值贴两端色档，不再被极端值拉扁。
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+/* airports.dat 的 city 是拼音/旧拼法。只写能确定的映射，不确定的一律保留并计入 unmapped，绝不猜。 */
+const EN2CN = {
+ Beijing:"北京", Shanghai:"上海", Chengdu:"成都", Chongqing:"重庆", Guangzhou:"广州", Shenzhen:"深圳",
+ Hangzhou:"杭州", Nanjing:"南京", Wuhan:"武汉", 'Xi\'an':"西安", Xianyang:"咸阳", Zhengzhou:"郑州",
+ Changsha:"长沙", Tianjin:"天津", Qingdao:"青岛", Dalian:"大连", Shenyang:"沈阳", Harbin:"哈尔滨",
+ Kunming:"昆明", Guiyang:"贵阳", Urumqi:"乌鲁木齐", Yining:"伊宁", Kashgar:"喀什", Hotan:"和田",
+ Altay:"阿勒泰", Aralshan:"阿尔山", Lanzhou:"兰州", Xining:"西宁", Yinchuan:"银川", Hohhot:"呼和浩特",
+ Baotou:"包头", Ordos:"鄂尔多斯", Chifeng:"赤峰", Tongliao:"通辽", Ulanhot:"乌兰浩特",
+ Ulanqab:"乌兰察布", Jining:"集宁", Ejina:"额济纳旗", Changchun:"长春", Jilin:"吉林",
+ Mudanjiang:"牡丹江", Jiamusi:"佳木斯", Yichun:"伊春", Dandong:"丹东", Yanji:"延吉",
+ Changde:"常德", Changzhi:"长治", Changzhou:"常州", Dali:"大理", Dayong:"张家界",
+ Dongying:"东营", Enshi:"恩施", Fuyun:"富蕴", Golmud:"格尔木", Guilin:"桂林",
+ Hailar:"呼伦贝尔", Handan:"邯郸", Hanzhong:"汉中", Heihe:"黑河", Hefei:"合肥",
+ Huolinhoshi:"霍林郭勒", Huzhou:"湖州", Jiagedaqi:"加格达奇", Qionghai:"琼海",
+ Jiujiang:"九江", Korla:"库尔勒", Kuerle:"库尔勒", Kuytun:"奎屯", Linyi:"临沂",
+ Luzhou:"泸州", Mangshi:"芒市", Nanchang:"南昌", Nantong:"南通", Nanyang:"南阳",
+ Ningbo:"宁波", Panzhihua:"攀枝花", Qiemo:"且末", Quzhou:"衢州", Ruoqiang:"若羌",
+ Shigatse:"日喀则", Shizuishan:"石嘴山", Tumen:"珲春", Turpan:"吐鲁番", Wuhu:"芜湖",
+ Wuxi:"无锡", Xiangyang:"襄阳", Xichang:"西昌", Xilinhot:"锡林浩特", Xingyi:"兴义",
+ Yanan:"延安", Yingkou:"营口", Yiwu:"义乌", Yulin:"榆林", Zhaotong:"昭通",
+ Zhuhai:"珠海", Zunyi:"遵义",
+ "Aksu":"阿克苏", "Anshan":"鞍山", "Bengbu":"蚌埠", "Daqing":"大庆", "Foshan":"佛山",
+ "Fuyang":"阜阳", "Golog":"果洛", "Hengyang":"衡阳", "Huangyan":"台州", "Jinchuan":"金川",
+ "Jixi":"鸡西", "LINFEN":"临汾", "Manzhouli":"满洲里", "Qingyang":"庆阳", "Qiqihar":"齐齐哈尔",
+ "Shangrao":"上饶", "Shiquanhe":"狮泉河", "Shiyan":"十堰", "Wanxian":"万州", "Weifang":"潍坊",
+ "Wuhai":"乌海", "Wuyishan":"武夷山", "Xi\'AN":"西安", "Xiangfan":"襄阳", "Xinzhou":"忻州",
+ "Yarkant":"莎车", "Yuncheng":"运城", "Zhalantun":"扎兰屯", "Zhijiang":"芷江", "Zhongwei":"中卫",
+};function toCn(r){
+  if(!r) return null;
+  const raw=r.city||"";
+  if(raw && !/^[\x00-\x7F]+$/.test(raw)) return raw;            // 已是中文
+  const hit=EN2CN[raw] || EN2CN[(r.iata||"")+"|"+raw] || null;
+  return hit;
+}
+/* 按城市归并：北京 PEK/PKX、上海 SHA/PVG 合成一条，取最低价，机场码全保留 */
+function normalize(){
+  const raw=[].concat(((window.FLIGHT_ALL||{}).rows)||[], ((window.FLIGHT_MTOP||{}).rows)||[]);
+  const by=new Map(); let unmapped=0;
+  const codes=x=>[].concat(x.iata_all||[], x.iata||[], x.code||[]).filter(Boolean);
+  raw.forEach(r=>{
+    if(!r.round) return;
+    const zh=toCn(r);
+    if(!zh) unmapped++;
+    const name=zh || r.city_en || r.city || r.iata;
+    const ex=by.get(name);
+    const keep=(!ex || +r.round < +ex.round) ? r : ex;
+    const all=[...new Set(codes(ex||{}).concat(codes(r)))];
+    /* 两批字段名不一致（all 用 iata、mtop 用 code），归一时补齐 iata，下游不再各写兜底 */
+    by.set(name, Object.assign({}, keep, {city:name, iata:keep.iata||keep.code||all[0]||null,
+      iata_all:all}));
+  });
+  const list=[...by.values()].sort((a,b)=>a.round-b.round);
+  list.unmapped=unmapped; list.rawCount=raw.filter(r=>r.round).length;
+  return list;
+}
+const FLIGHTS=normalize();
+const cssn=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const WARM=()=>["--w1","--w2","--w3","--w4","--w5","--w6"].map(cssn);
+
+/* 分级基准：先剔掉一个最高、一个最低，用余下样本的范围去分档。
+   极端值本身仍会画出来，只是被贴到两端色档，不再把中间六档挤成一条直筒。 */
+function tierRange(vs){
+  const p=vs.filter(v=>typeof v==="number"&&isFinite(v)).sort((a,b)=>a-b);
+  if(p.length<=2){ const lo=p.length?p[0]:0, hi=p.length?p[p.length-1]:1;
+    return {lo:lo, hi:hi, min:p.length?p[0]:null, max:p.length?p[p.length-1]:null, n:p.length, trimmed:false}; }
+  return {lo:p[1], hi:p[p.length-2], min:p[0], max:p[p.length-1], n:p.length, trimmed:true};
+}
+window.tierRange=tierRange;
+
+const GEO=window.CN_GEO&&CN_GEO.features||[];
+const GNAMES=GEO.map(f=>f.properties.name);
+const ALIAS={"大理":"大理白族自治州","伊犁":"伊犁哈萨克自治州","恩施":"恩施土家族苗族自治州",
+  "湘西":"湘西土家族苗族自治州","黔南":"黔南布依族苗族自治州","黔东南":"黔东南苗族侗族自治州",
+  "黔西南":"黔西南布依族苗族自治州","大兴安岭":"大兴安岭地区","阿勒泰":"阿勒泰地区",
+  "喀什":"喀什地区","和田":"和田地区","塔城":"塔城地区","阿克苏":"阿克苏地区",
+  "海西":"海西蒙古族藏族自治州","果洛":"果洛藏族自治州","甘孜":"甘孜藏族自治州",
+  "阿坝":"阿坝藏族羌族自治州","西双版纳":"西双版纳傣族自治州","德宏":"德宏傣族景颇族自治州",
+  "迪庆":"迪庆藏族自治州","怒江":"怒江傈僳族自治州","临沧":"临沧市","楚雄":"楚雄彝族自治州",
+  "红河":"红河哈尼族彝族自治州","文山":"文山壮族苗族自治州","普洱":"普洱市","保山":"保山市",
+  "呼伦贝尔":"呼伦贝尔市","巴彦淖尔":"巴彦淖尔市","乌兰察布":"乌兰察布市"};
+function matchPoly(n){
+  if(GNAMES.includes(n)) return n;
+  if(ALIAS[n] && GNAMES.includes(ALIAS[n])) return ALIAS[n];
+  if(GNAMES.includes(n+"市")) return n+"市";
+  return GNAMES.find(g=>g.startsWith(n)) || null;
+}
+/* 城市坐标：优先机场经纬度，回落多边形质心 */
+function coordOf(r){
+  if(r.lon&&r.lat) return [r.lon, r.lat];
+  const g=matchPoly(r.city); if(!g) return null;
+  const f=GEO.find(x=>x.properties.name===g);
+  return f? f.properties.c : null;
+}
+function ensureMap(){
+  if(!window.echarts || !window.CN_GEO) return false;
+  try{ if(echarts.getMap && echarts.getMap("cn")) return true; }catch(e){}
+  try{ echarts.registerMap("cn", CN_GEO); return true; }
+  catch(e){ console.warn("registerMap cn failed", e); return false; }
+}
+function flightMap(domId, opts){
+  const el=document.getElementById(domId); if(!el||!window.echarts) return null;
+  if(!ensureMap()){ el.innerHTML='<div style="padding:30px;color:var(--muted);font-size:14px">地图底图未就绪</div>'; return null; }
+  const o=opts||{};
+  const list=FLIGHTS.map(r=>{
+    if(o.dated && r.out_cal && r.back_cal){
+      const a=+r.out_cal[o.dep], b=+r.back_cal[o.back];
+      return (a>0&&b>0)? Object.assign({},r,{_v:a+b}) : null;
+    }
+    return Object.assign({},r,{_v:+r.round});
+  }).filter(Boolean);
+  if(!list.length) return null;
+  const vs=list.map(r=>r._v);
+  const rg=tierRange(vs), lo=rg.lo, hi=rg.hi, span=Math.max(1,hi-lo);
+  const warm=WARM();
+  /* 截尾区间之外的值贴到两端色档：0=最浅档、1=最深档 */
+  const pos=v=>Math.max(0, Math.min(1, (v-lo)/span));
+  const col=v=>warm[Math.min(warm.length-1, Math.floor(pos(v)*warm.length))];
+  const byGeo={};
+  list.forEach(r=>{ const g=matchPoly(r.city); if(!g) return;
+    if(!byGeo[g]||r._v<byGeo[g]._v) byGeo[g]=r; });
+  const bub=list.map(r=>{ const c=coordOf(r); if(!c) return null;
+    return {name:r.city, value:[c[0],c[1],r._v], __:r,
+      symbolSize:3+8*Math.sqrt(pos(r._v)),
+      itemStyle:{color:col(r._v), borderColor:cssn("--surface"), borderWidth:1.3}};
+  }).filter(Boolean);
+  const ch=echarts.getInstanceByDom(el)||echarts.init(el);
+  ch.setOption({
+    tooltip:{trigger:"item", backgroundColor:cssn("--surface"), borderColor:cssn("--ring"), borderWidth:1,
+      textStyle:{color:cssn("--ink"),fontSize:13}, extraCssText:"border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.16)",
+      formatter:p=>{ const r=p.data&&p.data.__;
+        if(!r) return `<b>${p.name}</b><br><span style="color:${cssn('--muted')};font-size:12px">本期无杭州直飞报价</span>`;
+        return `<b>${r.city}</b> <span style="color:${cssn('--muted')};font-size:12px">${(r.iata_all||[]).join('/')}</span><br>`
+          +`往返合计 <b>¥${r._v.toFixed(0)}</b>`
+          +((r.iata_all||[]).length>1?`<br><span style="font-size:12px">含 ${r.iata_all.length} 个机场，取最低</span>`:'')
+          +(o.dated?`<br><span style="font-size:12px">${o.dep} 去 ¥${+(r.out_cal[o.dep])} ＋ ${o.back} 返 ¥${+(r.back_cal[o.back])}</span>`
+                   :(r.out_price?`<br><span style="font-size:12px">去 ¥${r.out_price} ＋ 返 ¥${r.back_price}</span>`:'')); }},
+    geo:{map:'cn', roam:true, scaleLimit:{min:1, max:12}, zoom:1,
+      aspectScale:.82, layoutCenter:['50%','52%'], layoutSize:'102%',
+      selectedMode:false,
+      itemStyle:{areaColor:cssn("--nodata"), borderColor:cssn("--surface"), borderWidth:.5},
+      emphasis:{itemStyle:{areaColor:cssn("--chip")}, label:{show:false}}, select:{disabled:true},
+      regions:GNAMES.map(n=>({name:n, value:byGeo[n]?byGeo[n]._v:null,
+        itemStyle:{areaColor:byGeo[n]?col(byGeo[n]._v):cssn("--nodata")}}))},
+    series:[{type:'scatter', coordinateSystem:'geo', geoIndex:0, z:20, symbol:'circle',
+      data:bub,
+      label:{show:o.labels!==false, position:'right', distance:3,
+        formatter:p=>`${p.name} ${p.value[2].toFixed(0)}`, color:cssn("--ink"), fontSize:9.5,
+        fontWeight:600, backgroundColor:cssn("--surface"), padding:[1,3], borderRadius:2},
+      labelLayout:{hideOverlap:o.labels==='smart', moveOverlap:'shiftY'},
+      emphasis:{label:{show:true, fontSize:12, fontWeight:700, color:cssn("--surface"),
+        backgroundColor:cssn("--ink"), borderRadius:4}}}],
+  }, true);
+  /* roam 只改坐标变换，不重跑标签布局：hideOverlap 的判定停在上一次布局，缩放后城市名会
+     整片留在「被挤掉」的隐藏态，看起来就是文字凭空消失。防抖重投一份 data 逼它按当前缩放
+     重排一次。必须是新对象引用——同引用会被 ECharts 判为无变化而跳过。 */
+  if(!ch.__relabel){ ch.__relabel=1; let t;
+    ch.on("georoam", ()=>{ clearTimeout(t); t=setTimeout(()=>{
+      try{ ch.setOption({series:[{data:bub.map(o=>Object.assign({},o))}]}); }catch(e){}
+    },180); }); }
+  return {chart:ch, cities:list.length, polys:Object.keys(byGeo).length,
+          bubbles:bub.length, lo:lo, hi:hi, min:rg.min, max:rg.max, trimmed:rg.trimmed,
+          unmapped:FLIGHTS.unmapped||0,
+          dedup:Math.max(0,(FLIGHTS.rawCount||0)-list.length)};
+}
+window.FLIGHTS=FLIGHTS; window.flightMap=flightMap;
+window.flightDataMeta={cities:FLIGHTS.length, unmapped:FLIGHTS.unmapped||0, raw:FLIGHTS.rawCount||0};
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   报告逻辑
+   原为 flights-app.js（本页专用），随数据层一并内联，保持单文件可部署。
+   改动点：① 02 地图支持选往返日期并按往返总价上色
+           ② 所有按颜色分级的图改用截尾区间分级
+           ③ 04 全国中位价改为截尾中位
+           ④ 05 城市列表按拼音排序、移动端改可搜索下拉多选、标签不带价格、
+              图表随去/返程 tab 切换量纲（不再标成往返）
+           ⑤ 06「只看有报价」改为「只看往返总价」，选中时隐藏出发/返程两列，删除状态列
+           ⑥ 页眉与 07 的数据来源条改为条目化，窄屏逐条堆叠
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const DATES=["2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28","2026-09-29","2026-09-30",
+             "2026-10-01","2026-10-02","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07","2026-10-08"];
+const WK=d=>["周日","周一","周二","周三","周四","周五","周六"][new Date(d+"T00:00:00").getDay()];
+const KIND=d=>{ const m=d.slice(5);
+  if(["09-25","09-26","09-27"].includes(m)) return "holiday";
+  if(["10-01","10-02","10-03","10-04","10-05","10-06","10-07"].includes(m)) return "holiday";
+  if(["09-28","09-29","09-30"].includes(m)) return "leave";
+  return "workday"; };
+const KN={holiday:"法定假", leave:"请假日", workday:"工作日"};
+const DEF_DEP="2026-09-27", DEF_BACK="2026-09-30";
+const MD=d=>d.slice(5);                                   // 09-27
+const fmt=n=>n==null?"—":Math.round(n);
+
+/* 城市数据统一由归一层提供：已按城市合并（同城多机场取最低），此处不再各自去重 */
+const CITIES=(window.FLIGHTS)||[];
+const PRICE=c=>c.filter(v=>typeof v==="number"&&isFinite(v)&&v>0).sort((a,b)=>a-b);
+const med=v=>{ const p=PRICE(v); if(!p.length) return null;
+  return p.length%2? p[(p.length-1)/2] : (p[p.length/2-1]+p[p.length/2])/2; };
+/* 截尾中位：先去掉一个最高、一个最低，再取中位数。样本 ≤3 时不裁，否则没意义。 */
+const medTrim=v=>{ const p=PRICE(v); return med(p.length<=3? p : p.slice(1,-1)); };
+/* d2<d1 为非法；d2==d1 是当日往返，不参与"最省/最贵"结论（否则会得到 10-08 去、10-08 回这种荒谬答案）。
+   结论卡要求至少 3 天行程，才是可执行的度假组合。 */
+const legal=(d1,d2)=>d1<=d2;
+const gapDays=(d1,d2)=>Math.round((new Date(d2+"T00:00:00")-new Date(d1+"T00:00:00"))/864e5);
+const tripOK=(d1,d2)=>legal(d1,d2)&&gapDays(d1,d2)>=3;
+const cityVal=(r,d1,d2)=>{ if(!legal(d1,d2)) return null;
+  const a=r.out_cal?+r.out_cal[d1]:null, b=r.back_cal?+r.back_cal[d2]:null;
+  return (a>0&&b>0)? a+b : (d1===DEF_DEP&&d2===DEF_BACK&&r.round? +r.round : null); };
+const ckey=r=>r.iata||r.city;
+const tierRange=window.tierRange;
+
+let selDep=DEF_DEP, selBack=DEF_BACK;         // 「当前组合」：06 表格、03 十字线、07 卡片
+let mapDep=DEF_DEP, mapBack=DEF_BACK;         // 02 地图独立的一组往返日期，与上面互不干扰
+const tip={backgroundColor:css("--surface"),borderColor:css("--ring"),borderWidth:1,
+  textStyle:{color:css("--ink"),fontSize:13},extraCssText:"border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.16)"};
+const ax=()=>({axisLine:{lineStyle:{color:css("--axis")}},axisTick:{show:false},
+  axisLabel:{color:css("--muted"),fontSize:11},splitLine:{lineStyle:{color:css("--grid")}}});
+const WARM=()=>["--w1","--w2","--w3","--w4","--w5","--w6"].map(css);
+const SWATCH=(extra)=>["--w1","--w2","--w3","--w4","--w5","--w6"]
+  .map(v=>`<span class="sw" style="background:${css(v)}"></span>`).join("")+(extra||"");
+
+/* ── 顶部结论 ── */
+function verdicts(){
+  const el=document.getElementById("verdicts"); if(!el) return;
+  const withCal=CITIES.filter(r=>r.out_cal||r.back_cal);
+  let best=null, worst=null, cheapestPair=null, dearPair=null;
+  DATES.forEach(d=>{ const m=medTrim(CITIES.map(r=>(r.out_cal||{})[d]));   // 与 04 同口径：截尾中位
+    if(m==null) return;
+    if(!best||m<best.m) best={d,m}; if(!worst||m>worst.m) worst={d,m}; });
+  DATES.forEach(d1=>DATES.forEach(d2=>{ if(!tripOK(d1,d2)) return; const m=medTrim(CITIES.map(r=>cityVal(r,d1,d2)));
+    if(m==null) return;
+    if(!cheapestPair||m<cheapestPair.m) cheapestPair={d1,d2,m};
+    if(!dearPair||m>dearPair.m) dearPair={d1,d2,m}; }));
+  const cards=[
+    {l:"当前选定组合 · 往返中位", p:`¥${medTrim(CITIES.map(r=>cityVal(r,selDep,selBack)))||"—"}`,
+     d:`${selDep}（${WK(selDep)}）去 · ${selBack}（${WK(selBack)}）返 · 全国中位`},
+    cheapestPair&&{l:"最省的组合 · 行程≥3天", p:`¥${cheapestPair.m.toFixed(0)}`,
+     d:`${cheapestPair.d1} 去 → ${cheapestPair.d2} 回，比最贵组合省 ¥${(dearPair.m-cheapestPair.m).toFixed(0)}`},
+    dearPair&&{l:"最贵的组合 · 行程≥3天", p:`¥${dearPair.m.toFixed(0)}`,
+     d:`${dearPair.d1} 去 → ${dearPair.d2} 回（${gapDays(dearPair.d1,dearPair.d2)} 天行程）`},
+    best&&{l:"最便宜的出发日 · 单程中位", p:`¥${best.m.toFixed(0)}`, d:`${best.d}（${WK(best.d)}·${KN[KIND(best.d)]}）出发，全国中位<b>单程</b>价`},
+    worst&&{l:"最贵的出发日 · 单程中位", p:`¥${worst.m.toFixed(0)}`, d:`${worst.d}（${WK(worst.d)}·${KN[KIND(worst.d)]}）出发，全国中位<b>单程</b>价`},
+    {l:"覆盖", p:`${CITIES.filter(r=>r.round||r.out_cal).length}/${CITIES.length}`,
+     d:`个机场城市有往返价 · 其中 ${withCal.length} 城带 15 天日历`},
+  ].filter(Boolean);
+  el.innerHTML=cards.slice(0,5).map(c=>`<div class="vd"><div class="l">${c.l}</div><div class="p">${c.p}</div><div class="d">${c.d}</div></div>`).join("");
+}
+
+/* ── 假期日历条 ── */
+function daycal(){
+  const el=document.getElementById("daycal"); if(!el) return;
+  const narrow=el.clientWidth<560;   // 窄屏把「周四」缩成「四」，15 格才挤得进一块屏
+  el.innerHTML=DATES.map(d=>`<div class="dc ${KIND(d)}" title="${d} ${WK(d)}·${KN[KIND(d)]}">
+    <b>${d.slice(8)}</b>${narrow? WK(d).slice(1) : WK(d)}</div>`).join("");
+}
+
+/* ── 去程×返程矩阵：六档 piecewise 分级，基准为截尾区间 ── */
+let mChart;
+function matrix(){
+  const el=document.getElementById("matrix"); if(!el) return;
+  if(!window.echarts) return;
+  if(!mChart) mChart=echarts.init(el);
+  const narrow=el.clientWidth<560;   // 窄屏：轴降级为日号、藏格内数字与画布内色卡，345px 也放得下 15×15
+  const data=[], vals=[];
+  DATES.forEach((d2,y)=>DATES.forEach((d1,x)=>{
+    if(!legal(d1,d2)) return;
+    const m=medTrim(CITIES.map(r=>cityVal(r,d1,d2)));   // 截尾中位：与 04、07 同一口径
+    if(m!=null){ data.push([x,y,+m.toFixed(0)]); vals.push(m); }
+  }));
+  if(!data.length){ mChart.clear(); document.getElementById("matrixKey").innerHTML=""; return; }
+  const w=WARM(), rg=tierRange(vals), lo=rg.lo, hi=rg.hi, span=Math.max(1,hi-lo);
+  const cut=w.map((_,k)=>lo+span*k/w.length);
+  /* 首档收 <、末档收 ≥，全部格子都落在某一档内；越出截尾区间的极端值贴两端 */
+  const pieces=w.map((c,k)=> k===0 ? {lt:cut[1], color:c, label:fmt(lo)+"−"}
+                 : k===w.length-1 ? {gte:cut[k], color:c, label:fmt(cut[k])+"+"}
+                 : {gte:cut[k], lt:cut[k+1], color:c, label:fmt(cut[k])+"–"+fmt(cut[k+1])});
+  mChart.setOption({
+    grid:{left:narrow?26:74, right:narrow?8:26, top:narrow?24:34, bottom:narrow?22:74},
+    tooltip:{...tip, formatter:p=>`<b>${DATES[p.value[0]]}（${WK(DATES[p.value[0]])}）去</b><br>`
+      +`<b>${DATES[p.value[1]]}（${WK(DATES[p.value[1]])}）返</b><br>全国截尾中位往返 <b>¥${p.value[2]}</b>`
+      +`<br><span style="color:${css('--muted')};font-size:11.5px">${KN[KIND(DATES[p.value[0]])]} 出发 · ${KN[KIND(DATES[p.value[1]])]} 返回</span>`},
+    xAxis:{type:"category", data:DATES.map(d=>narrow? d.slice(8) : d.slice(5)),
+      name:narrow?"":"去程日", nameLocation:"middle", nameGap:26,
+      position:"top", ...ax(), splitLine:{show:false}, boundaryGap:true,
+      axisLabel:{color:css("--muted"),fontSize:narrow?9:10,rotate:narrow?0:42,margin:narrow?5:8}},
+    yAxis:{type:"category", data:DATES.map(d=>narrow? d.slice(8) : d.slice(5)),
+      name:narrow?"":"返程日", nameLocation:"middle", nameGap:52,
+      ...ax(), splitLine:{show:false}, boundaryGap:true,
+      axisLabel:{color:css("--muted"),fontSize:narrow?9:10,margin:narrow?4:8}},
+    /* 六段色卡在窄屏让位给图表下方的 HTML 图例（同样六档+区间），否则标签会被画布裁掉 */
+    visualMap:{show:!narrow, type:"piecewise", pieces, selectedMode:false, hoverLink:false,
+      orient:"horizontal", left:"center", bottom:6, itemWidth:16, itemHeight:12, itemGap:6,
+      textStyle:{color:css("--ink2"),fontSize:10}},
+    series:[{type:"heatmap", data, progressive:0,
+      itemStyle:{borderColor:css("--page"), borderWidth:narrow?.8:1.5, borderRadius:0},
+      emphasis:{itemStyle:{borderColor:css("--ink"), borderWidth:2}},
+      label:{show:!narrow, fontSize:9.5, color:"auto",
+        formatter:p=>p.value[2]},   // color:"auto" 让深格用白字、浅格用深字，白底版才不会糊
+      markLine:{silent:true, symbol:"none",
+        lineStyle:{color:css("--ink"), width:1.6, type:"solid"},
+        label:{show:false},
+        data:[{xAxis:DATES.indexOf(selDep)},{yAxis:DATES.indexOf(selBack)}]}}],
+  }, true);
+  document.getElementById("matrixKey").innerHTML = SWATCH(
+      `<span class="ql" style="margin-left:6px">¥${fmt(lo)} → ¥${fmt(hi)}</span>`
+    + `<span style="margin-left:auto">黑线交叉＝06 选定组合</span>`)
+    + (narrow? `<span class="ql" style="flex:1 1 100%">横＝去程日、纵＝返程日（日号）。窄屏隐去格内数字，点格读数。</span>`:``);
+  document.getElementById("matrixNote").innerHTML =
+    `右下三角留空＝返程早于出发的非法组合；对角线是当日往返，参考意义不大。` + (window.__MATRIX_READ__||``);
+}
+
+/* ── 全国中位价随日期变化：三条线各自铺满 15 天，均为截尾中位 ── */
+let gChart;
+function dateCurve(){
+  const el=document.getElementById("dateCurve"); if(!el) return;
+  if(!window.echarts) return;
+  if(!gChart) gChart=echarts.init(el);
+  const narrow=el.clientWidth<560;
+  const C=CITIES.filter(r=>r.out_cal||r.back_cal);
+  if(C.length<5){ el.closest(".card").style.display="none"; return; }
+  el.closest(".card").style.display="";
+  const outM=DATES.map(d=>medTrim(C.map(r=>(r.out_cal||{})[d])));
+  const backM=DATES.map(d=>medTrim(C.map(r=>(r.back_cal||{})[d])));
+  gChart.setOption({
+    grid:{left:44,right:narrow?10:112,top:narrow?38:34,bottom:narrow?60:56},
+    tooltip:{...tip, trigger:"axis", axisPointer:{type:"cross",lineStyle:{color:css("--axis")}},
+      formatter:p=>`<b>${DATES[p[0].dataIndex]}（${WK(DATES[p[0].dataIndex])}·${KN[KIND(DATES[p[0].dataIndex])]})</b><br>`
+        +p.filter(x=>x.value!=null).map(x=>`${x.marker}${x.seriesName} <b>¥${x.value}</b>`).join("<br>")
+        +`<br><span style="color:${css('--muted')};font-size:11.5px">样本 ${C.length} 城 · 去掉当日最高、最低各一城后取中位</span>`},
+    legend:narrow? {show:true, type:"scroll", top:0, left:0, right:0, itemWidth:13, itemHeight:8,
+        textStyle:{color:css("--ink2"),fontSize:10.5}}
+      : {top:0,right:0,textStyle:{color:css("--ink2"),fontSize:11.5},itemWidth:15,itemHeight:9},
+    xAxis:{type:"category", data:DATES.map(d=>d.slice(5)), boundaryGap:false, ...ax(), splitLine:{show:false},
+      axisLabel:{color:css("--muted"),fontSize:narrow?9:10.5,rotate:narrow?62:40,margin:narrow?6:8}},
+    yAxis:{type:"value", name:"¥ 中位", nameTextStyle:{color:css("--muted"),fontSize:11}, ...ax()},
+    series:[
+      {name:"去程中位单程价", type:"line", data:outM.map(v=>v==null?null:+v.toFixed(0)),
+       symbol:"circle", symbolSize:6, connectNulls:true,
+       lineStyle:{width:2.4,color:css("--s1")}, itemStyle:{color:css("--s1")},
+       endLabel:{show:!narrow,formatter:"去程",color:css("--ink2"),fontSize:11,distance:6}},
+      {name:"返程中位单程价", type:"line", data:backM.map(v=>v==null?null:+v.toFixed(0)),
+       symbol:"emptyCircle", symbolSize:6, connectNulls:true,
+       lineStyle:{width:2.4,color:css("--s3")}, itemStyle:{color:css("--s3")},
+       endLabel:{show:!narrow,formatter:"返程",color:css("--ink2"),fontSize:11,distance:6}},
+      {name:"去程中位单程价", type:"line", data:[], markArea:{silent:true,
+        itemStyle:{color:css("--s2"),opacity:.06},
+        data:[[{xAxis:"09-25"},{xAxis:"09-27"}],[{xAxis:"10-01"},{xAxis:"10-07"}]]}},
+    ]}, true);
+  const om=outM.map((v,i)=>({v,i})).filter(x=>x.v!=null);
+  const ob=backM.map((v,i)=>({v,i})).filter(x=>x.v!=null);
+  if(!om.length||!ob.length){ document.getElementById("dateNote").innerHTML=""; return; }
+  const omD=DATES[om.reduce((a,b)=>b.v<a.v?b:a).i], omX=DATES[om.reduce((a,b)=>b.v>a.v?b:a).i];
+  const obD=DATES[ob.reduce((a,b)=>b.v<a.v?b:a).i], obX=DATES[ob.reduce((a,b)=>b.v>a.v?b:a).i];
+  const omin=Math.min(...om.map(x=>x.v)), omax=Math.max(...om.map(x=>x.v));
+  const obmin=Math.min(...ob.map(x=>x.v)), obmax=Math.max(...ob.map(x=>x.v));
+  document.getElementById("dateNote").innerHTML =
+    `去程 <b>¥${omin.toFixed(0)}</b>（${omD.slice(5)}）↔ <b>¥${omax.toFixed(0)}</b>（${omX.slice(5)}），峰谷差 ${((omax-omin)/omin*100).toFixed(0)}%；`
+    + `返程 <b>¥${obmin.toFixed(0)}</b>（${obD.slice(5)}）↔ <b>¥${obmax.toFixed(0)}</b>（${obX.slice(5)}），峰谷差 ${((obmax-obmin)/obmin*100).toFixed(0)}%。`}
+
+/* ── 单城走势：城市选择 + 单量纲折线 ── */
+let cChart;
+const PALETTE=()=>["--s1","--s2","--s3","--s5","--s7"].map(css);   // 校验器已验 5 槽 adjacent 全 PASS
+const MAXP=5;                                                      // 同时对比上限，与色板槽位数一致
+const DEF_PICK=["CTU","URC","LXA","SYX","KMG","HRB"];
+let picked=DEF_PICK.slice(0);
+let calMode="out";         // 单图单量纲：out 或 back，不并列
+let POOL=[];
+
+/* 拼音序：zh-Hans 显式要 pinyin 变体，取不到就退回默认 zh 排序，再不行原样（多数浏览器带完整 ICU） */
+const ZHC=(function(){
+  try{ return new Intl.Collator("zh-Hans-CN-u-co-pinyin"); }
+  catch(e){ try{ return new Intl.Collator("zh-Hans-CN"); }catch(e2){ return null; } } })();
+const byPinyin=(a,b)=>{ const r=ZHC? ZHC.compare(a.city,b.city)
+    : String(a.city).localeCompare(String(b.city),"zh");
+  return r || String(ckey(a)).localeCompare(String(ckey(b))); };
+const findCity=k=>CITIES.find(r=>ckey(r)===k||(r.iata_all||[]).indexOf(k)>=0);
+function buildPool(){
+  const n=o=>o?Object.keys(o).length:0;
+  POOL=CITIES.filter(r=>Math.max(n(r.out_cal),n(r.back_cal))>5).sort(byPinyin);
+  const avail=POOL.map(ckey);
+  picked=picked.filter(k=>avail.indexOf(k)>=0);
+  if(!picked.length) picked=avail.slice(0,3);
+  if(picked.length>MAXP) picked=picked.slice(0,MAXP);
+}
+/* PC：chip 墙。标签只放城市名，价格走 tooltip/图表，避免窄屏挤成两行 */
+function chips(){
+  const el=document.getElementById("chips"); if(!el) return;
+  el.innerHTML=POOL.map(r=>{ const k=ckey(r);
+    const t=`${(r.iata_all||[r.iata]).join("/")} · 往返 ¥${(r.round||0).toFixed(0)}`;
+    return `<span class="chip" data-c="${k}" title="${t}" aria-pressed="${picked.indexOf(k)>=0?"true":"false"}">${r.city}</span>`;
+  }).join("");
+  if(!el.dataset.wired){ el.dataset.wired="1";
+    el.onclick=e=>{ const s=e.target.closest(".chip"); if(!s) return; toggleCity(s.dataset.c); }; }
+}
+/* 移动端：可搜索下拉多选。标签行常驻，面板按需展开 */
+function buildPicker(){
+  const box=document.getElementById("cpBox"); if(!box||box.dataset.built) return;
+  box.dataset.built="1";
+  box.innerHTML=`<div class="cpopts" id="cpTags"></div>
+    <button type="button" class="cpbtn" id="cpBtn" aria-expanded="false" aria-controls="cpPanel">
+      <span class="cap">对比城市</span><span class="sm" id="cpSum"></span><span class="cv" id="cvIco">▾</span></button>
+    <div class="cpanel" id="cpPanel" hidden>
+      <input class="cpq" id="cpQ" type="search" autocomplete="off" placeholder="搜索城市名 / 机场码，如 成都 或 CTU" aria-label="搜索城市">
+      <div class="cplist" id="cpList" role="listbox" aria-multiselectable="true" aria-label="可选城市"></div>
+      <div class="cpfoot"><span id="cpCount"></span><button type="button" class="cprst" id="cpReset">恢复默认</button></div>
+    </div>`;
+  const btn=document.getElementById("cpBtn"), panel=document.getElementById("cpPanel"), q=document.getElementById("cpQ");
+  const open=v=>{ panel.hidden=!v; btn.setAttribute("aria-expanded",v?"true":"false");
+    document.getElementById("cvIco").textContent=v?"▴":"▾";
+    if(v){ renderList(); setTimeout(()=>q.focus(),40); } };
+  btn.onclick=()=>open(panel.hidden);
+  q.oninput=renderList;
+  document.getElementById("cpReset").onclick=()=>{
+    const avail=POOL.map(ckey);
+    picked=DEF_PICK.filter(k=>avail.indexOf(k)>=0).slice(0,MAXP);
+    if(!picked.length) picked=avail.slice(0,3);
+    syncPick(); cityCal(); };
+  document.getElementById("cpList").onchange=e=>{
+    const k=e.target&&e.target.getAttribute?e.target.getAttribute("data-c"):null;
+    if(k) toggleCity(k); };
+  document.getElementById("cpTags").onclick=e=>{
+    const x=e.target.closest("[data-x]"); if(!x) return; toggleCity(x.getAttribute("data-x")); };
+  document.addEventListener("click",e=>{ if(!panel.hidden && !box.contains(e.target)) open(false); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !panel.hidden) open(false); });
+}
+function renderList(){
+  const list=document.getElementById("cpList"); if(!list) return;
+  const q=(document.getElementById("cpQ").value||"").trim().toLowerCase();
+  const hit=r=>{ if(!q) return true;
+    return [r.city, r.city_en, r.iata].concat(r.iata_all||[])
+      .filter(Boolean).some(s=>String(s).toLowerCase().indexOf(q)>=0); };
+  const rows=POOL.filter(hit);
+  if(!rows.length){ list.innerHTML=`<div class="cpnone">没有匹配「${q}」的城市，试试机场三字码</div>`; syncPick(); return; }
+  list.innerHTML=rows.map(r=>{ const k=ckey(r), on=picked.indexOf(k)>=0;
+    const en=r.city_en&&r.city_en!==r.city?`<span class="en">${r.city_en}</span>`:"";
+    return `<label class="cpi" data-k="${k}" aria-checked="${on?"true":"false"}">`
+      +`<input type="checkbox" data-c="${k}"${on?" checked":""}>`            /* 勾选框就是这个 input 本身 */
+      +`<span class="nm">${r.city}</span>${en}`
+      +`<span class="cd">${(r.iata_all||[r.iata]).join("/")}</span></label>`;
+  }).join("");
+}
+function toggleCity(k){
+  const ix=picked.indexOf(k);
+  if(ix>=0){ if(picked.length>1) picked.splice(ix,1); }
+  else { if(picked.length>=MAXP) picked.shift(); picked.push(k); }
+  syncPick(); cityCal();
+}
+/* 只同步勾选态与文案，不重建列表——否则开着面板改日期会把搜索词清掉 */
+function syncPick(){
+  const el=document.getElementById("chips");
+  if(el) [...el.children].forEach(c=>c.setAttribute("aria-pressed", picked.indexOf(c.dataset.c)>=0?"true":"false"));
+  const names=picked.map(k=>{ const r=findCity(k); return r?r.city:k; });
+  const tags=document.getElementById("cpTags");
+  if(tags) tags.innerHTML=picked.map(k=>{ const r=findCity(k), nm=r?r.city:k;
+    return `<span class="cptag">${nm}<em data-x="${k}" role="button" aria-label="移除 ${nm}">✕</em></span>`;
+  }).join("");
+  const sum=document.getElementById("cpSum"); if(sum) sum.textContent=names.join("、")||"未选择";
+  const cnt=document.getElementById("cpCount");
+  if(cnt) cnt.textContent=`已选 ${picked.length} / ${MAXP} · 至少留 1 城，超出上限会替换最早选的`;
+  const list=document.getElementById("cpList");
+  if(list) [...list.querySelectorAll(".cpi")].forEach(row=>{
+    const k=row.getAttribute("data-k"), on=picked.indexOf(k)>=0;
+    row.setAttribute("aria-checked", on?"true":"false");
+    const i=row.querySelector("input"); if(i) i.checked=on; });
+}
+function initCalMode(){
+  const mb=document.getElementById("calMode"); if(!mb) return;
+  mb.innerHTML=[["out","去程价（杭州→该城）"],["back","返程价（该城→杭州）"]]
+    .map(([k,t])=>`<button class="tg" type="button" data-m="${k}" aria-pressed="${k===calMode?"true":"false"}">${t}</button>`).join("");
+  mb.onclick=e=>{const b=e.target.closest(".tg[data-m]"); if(!b) return;
+    calMode=b.dataset.m; cityCal();};
+}
+function cityCal(){
+  const el=document.getElementById("cityCal"); if(!el) return;
+  if(!window.echarts) return;
+  if(!cChart) cChart=echarts.init(el);
+  /* 完整 15 天：去程价用 out_cal 全窗口，返程价用 back_cal 全窗口，
+     不再做 d1<=selBack 的截断——那会让曲线在选定返程日之后整段消失 */
+  const src=calMode==="out"?(r=>(r.out_cal||{})):(r=>(r.back_cal||{}));
+  const all=picked.map(findCity).filter(r=>r&&(r.out_cal||r.back_cal));
+  const sets=all.filter(r=>DATES.some(d=>+src(r)[d]>0));   // 该方向无日历的城不画，避免出现空线
+  const skipped=all.length-sets.length;
+  const PL=PALETTE(), narrow=el.clientWidth<620, lab=calMode==="out"?"去程":"返程";
+  const series=sets.map((r,i)=>{
+    const c=PL[i%PL.length];
+    const data=DATES.map(d=>{ const v=+src(r)[d]; return v>0? +v.toFixed(0) : null; });
+    return { name:r.city, type:"line", data:data, symbol:"circle", symbolSize:6, connectNulls:true,
+      lineStyle:{width:2.3, color:c}, itemStyle:{color:c},
+      endLabel:{show:!narrow, formatter:r.city, color:css("--ink2"), fontSize:10.5, distance:6} };
+  });
+  cChart.setOption({
+    grid:{left:narrow?48:58, right:narrow?14:120, top:narrow?42:26, bottom:narrow?46:50},
+    /* 窄屏放不下右侧引出标签，改顶部可滑图例；宽屏保持引出标签省一行高度 */
+    legend:narrow? {show:true, type:"scroll", top:2, left:0, right:0, itemWidth:14, itemHeight:8,
+        textStyle:{color:css("--ink2"),fontSize:11}, data:sets.map(r=>r.city)} : {show:false},
+    tooltip:{...tip, trigger:"axis", axisPointer:{type:"line",lineStyle:{color:css("--axis")}},
+      formatter:p=>`<b>${DATES[p[0].dataIndex]}（${WK(DATES[p[0].dataIndex])}·${KN[KIND(DATES[p[0].dataIndex])]})</b> ${lab}<br>`
+        +p.filter(x=>x.value!=null).map(x=>`${x.marker}${x.seriesName} ${lab}单程 <b>¥${x.value}</b>`).join("<br>")
+        +`<br><span style="color:${css('--muted')};font-size:11.5px">${calMode==="out"?"杭州→该城":"该城→杭州"} 当日单程最低价，非往返合计</span>`},
+    xAxis:{type:"category", data:DATES.map(d=>d.slice(5)), boundaryGap:false, ...ax(), splitLine:{show:false},
+      axisLabel:{color:css("--muted"),fontSize:narrow?9:10.5,rotate:narrow?62:40,margin:narrow?6:8}},
+    yAxis:{type:"value", name:lab+" ¥", nameTextStyle:{color:css("--muted"),fontSize:11}, ...ax()},
+    series,
+  }, true);
+  const mb=document.getElementById("calMode");
+  if(mb)[...mb.children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.m===calMode?"true":"false"));
+  document.getElementById("cityNote").innerHTML =
+    `读的是${calMode==="out"?"杭州→该城":"该城→杭州"}<b>单程价</b>，非往返合计；最多同画 ${MAXP} 城`
+    + (skipped>0? `，${skipped} 城无该方向日历未画` : ``) + `。`;
+}
+
+/* ── 表格：只看往返总价时收起出发/返程两列；无状态列 ── */
+function table(){
+  const el=document.getElementById("tbl"); if(!el) return;
+  const btn=document.getElementById("onlyTrip");
+  const only=!!btn && btn.getAttribute("aria-pressed")==="true";
+  const rows=CITIES.map(r=>({r, v:cityVal(r,selDep,selBack)}))
+    .filter(x=>!only||x.v!=null)
+    .sort((a,b)=>(a.v==null)-(b.v==null) || (a.v||0)-(b.v||0));
+  const cheapest=rows.filter(x=>x.v!=null).slice(0,3).map(x=>x.v);   // 前三低用强调色
+  const isHi=v=>v!=null && cheapest.indexOf(v)>=0;
+  const cols=only? "" : `<th class="num">出发日价</th><th class="num">返程日价</th>`;
+  el.innerHTML=`<thead><tr><th>城市</th><th>IATA</th>${cols}<th class="num">往返合计</th></tr></thead><tbody>`
+    + rows.map(({r,v})=>{
+      const a=r.out_cal?+r.out_cal[selDep]:r.out_price, b=r.back_cal?+r.back_cal[selBack]:r.back_price;
+      const pair=only? "" : `<td class="num">${a>0?"¥"+a.toFixed(0):"—"}</td>`
+                          +`<td class="num">${b>0?"¥"+b.toFixed(0):"—"}</td>`;
+      return `<tr><td>${r.city}${r.city_en&&r.city!==r.city_en?` <span style="color:var(--muted);font-size:11.5px">${r.city_en}</span>`:""}</td>`
+        +`<td style="color:var(--muted)">${(r.iata_all&&r.iata_all.length>1? r.iata_all.join("/"):(r.iata||"—"))}</td>`
+        +pair
+        +`<td class="num${isHi(v)?" hi":""}" style="font-weight:600">${v!=null?"¥"+v.toFixed(0):"—"}</td></tr>`;
+    }).join("")+`</tbody>`;
+  const n=rows.filter(x=>x.v!=null).length;
+  document.getElementById("tblNote").innerHTML= only
+    ? `仅列 ${selDep}→${selBack} 去返两日均有报价的 <b>${n}</b> 城，去／返两列已收起。`
+    : `<b>${n}</b> 城有往返总价，${rows.length-n} 城该组合无报价。`;
+}
+
+/* ── 地图 ── */
+function fmap(){
+  const el=document.getElementById("fMap"); if(!el) return;
+  const key=document.getElementById("fMapKey"), note=document.getElementById("fMapNote");
+  const trip=document.getElementById("mapTrip");
+  if(!window.flightMap||!window.echarts) return;
+  /* 提示语与画布共用一个容器：切换前必须先 dispose 再清 innerHTML，
+     否则上一次的提示文字会和重画出来的地图叠在一起 */
+  const say=msg=>{ const i=echarts.getInstanceByDom(el); if(i) i.dispose();
+    el.innerHTML=`<div style="padding:30px;color:var(--muted);font-size:14px">${msg}</div>`; };
+  if(!legal(mapDep,mapBack)){
+    say(`返程日 ${mapBack} 早于出发日 ${mapDep}，无合法组合——调换两天或重选日期。`);
+    if(key) key.innerHTML="";
+    if(note) note.innerHTML="返程不得早于出发，本组合不参与计算。";
+    if(trip) trip.innerHTML='<span class="pill warn">组合非法</span>';
+    return;
+  }
+  if(!echarts.getInstanceByDom(el)) el.innerHTML="";
+  const r=flightMap("fMap", {dated:true, dep:mapDep, back:mapBack, labels:"smart"});
+  if(!r){ say("该日期组合下无任何报价");
+    if(key) key.innerHTML=""; if(note) note.innerHTML=""; if(trip) trip.textContent="—"; return; }
+  if(trip) trip.innerHTML=`${MD(mapDep)} 去 · ${MD(mapBack)} 返 · 行程 ${gapDays(mapDep,mapBack)} 天 · 色带＝往返总价`;
+  key.innerHTML = SWATCH(
+      `<span class="ql" style="margin-left:6px">¥${fmt(r.lo)} → ¥${fmt(r.hi)}<span style="color:var(--muted)">（浅→深＝便宜→贵）</span></span>`
+    + `<span class="nd" style="margin-left:auto"></span><span>无直飞报价</span>`);
+  note.innerHTML =
+    `本组合有报价 <b>${r.cities}</b> 城（同城多机场已归并，去重 ${r.dedup} 条），其中 ${r.polys} 城匹配到地级多边形着色，其余以气泡落位。`
+    + (r.unmapped? ` <b>${r.unmapped}</b> 城名未映射为中文，暂以拼音原样显示。` : ``);
+}
+
+/* ── 控件与初始化 ──
+   两组日期刻意独立：depSel/backSel 只驱动 02 地图，depSel2/backSel2 驱动 03 十字线、06 表格与 07 卡片。
+   地图换日期只重画地图，不必拖全页重算；两边互不覆盖，读者可拿同一张地图对比不同日期组合。 */
+function optHtml(){ return DATES.map(d=>`<option value="${d}">${d} ${WK(d)}·${KN[KIND(d)]}</option>`).join(""); }
+function dateSel(id, val, set, redraw){
+  const el=document.getElementById(id); if(!el) return;
+  el.innerHTML=optHtml(); el.value=val;
+  el.onchange=()=>{ set(el.value); redraw(); };
+}
+function initDateCtl(){
+  dateSel("depSel",  mapDep,  v=>{mapDep=v;},  fmap);
+  dateSel("backSel", mapBack, v=>{mapBack=v;}, fmap);
+  dateSel("depSel2",  selDep,  v=>{selDep=v;},  renderAll);
+  dateSel("backSel2", selBack, v=>{selBack=v;}, renderAll);
+}
+function head(){
+  const all=((window.FLIGHT_ALL||{}).rows)||[];
+  const codes=new Set(all.map(r=>r.iata).filter(x=>x&&x!=="\\N"));
+  const cities=new Set(all.map(r=>r.city_en||r.city).filter(Boolean));
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  set("hCodes",codes.size); set("hCity",cities.size); set("hPriced",CITIES.length);
+  set("nC",codes.size); set("nU",cities.size); set("nP",CITIES.length);
+  set("kPriced",CITIES.length);
+  set("hWin", MD(DATES[0])+" → "+MD(DATES[DATES.length-1]));   // 窗口=日历覆盖范围，与"选定出发日"是两回事
+  if(CITIES.length){
+    set("kBand","¥"+CITIES[0].round.toFixed(0)+"–"+CITIES[CITIES.length-1].round.toFixed(0));
+    const C=CITIES.filter(r=>r.out_cal||r.back_cal);
+    const om=DATES.map(d=>medTrim(C.map(r=>(r.out_cal||{})[d]))).filter(v=>v!=null);   // 与 04 同口径
+    const bm=DATES.map(d=>medTrim(C.map(r=>(r.back_cal||{})[d]))).filter(v=>v!=null);
+    const sp=a=>a.length>1?((Math.max(...a)-Math.min(...a))/Math.min(...a)*100).toFixed(0):"—";
+    set("kOut",sp(om)); set("kBack",sp(bm));
+  }
+}
+function meta(){
+  const src=window.FLIGHT_ALL||window.FLIGHT_MTOP||{};
+  const items=[["取数",src.collected||"—"],
+               ["城市",`${CITIES.length} 个中国民航机场城市`],
+               ["窗口",`${DATES[0]} → ${DATES[DATES.length-1]}（15 天）`],
+               ["当前组合",`${selDep} 去 / ${selBack} 返 · ${gapDays(selDep,selBack)} 天`],
+               ["来源","飞猪 mtop 低价日历"]];
+  const mi=document.getElementById("meta"); if(!mi) return;
+  mi.innerHTML=items.map(([k,v])=>`<span class="mi"><i>${k}</i><b>${v}</b></span>`).join("");
+  document.getElementById("stamp").textContent=`生成于 ${new Date().toLocaleString("zh-CN")} · 价格为取数时刻的实时报价，机票随库存变动，隔日需重取。`;
+}
+function renderAll(){ head(); meta(); verdicts(); fmap(); matrix(); dateCurve(); cityCal(); table(); syncPick(); }
+
+function resizeAll(){
+  const cs=[mChart,gChart,cChart,echarts.getInstanceByDom(document.getElementById("fMap"))].filter(Boolean);
+  cs.forEach(c=>{ try{ c.resize(); }catch(e){} });
+  daycal(); matrix(); dateCurve(); cityCal();   // 窄↔宽跨越阈值时轴标签、图例、色卡都要换布局
+}
+function init(){
+  daycal(); buildPool(); chips(); buildPicker(); syncPick(); initCalMode();
+  initDateCtl();                       // 日期控件两组独立，须在 renderAll 之前接好
+  const ot=document.getElementById("onlyTrip");
+  if(ot) ot.onclick=()=>{ ot.setAttribute("aria-pressed", ot.getAttribute("aria-pressed")!=="true"?"true":"false"); table(); };
+  renderAll();
+  let t; addEventListener("resize",()=>{ clearTimeout(t); t=setTimeout(resizeAll,160); });
+  new MutationObserver(()=>renderAll()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",renderAll);
+}
+if(!CITIES.length){
+  document.getElementById("meta").innerHTML =
+    `<span class="mi"><i>状态</i><b>尚未取得数据。先运行 <code>python3 tools/collect_all_airports.py</code> 生成 <code>data/flight-all.js</code> 后刷新。</b></span>`;
+} else init();
+})();
+</script>
+<script>
+/* 图表引擎缺席时给出可见说明，避免整页留白被误读为"没有数据" */
+setTimeout(function(){
+  if(!window.echarts){ var f=document.getElementById('chartfail'); if(f) f.style.display='block'; }
+}, 2500);
+</script>
+</body>
+</html>
