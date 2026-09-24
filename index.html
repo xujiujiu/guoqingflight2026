@@ -678,15 +678,10 @@ function matrix(){
       itemStyle:{borderColor:css("--page"), borderWidth:narrow?.8:1.5, borderRadius:0},
       emphasis:{itemStyle:{borderColor:css("--ink"), borderWidth:2}},
       label:{show:!narrow, fontSize:9.5, color:"auto",
-        formatter:p=>p.value[2]},   // color:"auto" 让深格用白字、浅格用深字，白底版才不会糊
-      markLine:{silent:true, symbol:"none",
-        lineStyle:{color:css("--ink"), width:1.6, type:"solid"},
-        label:{show:false},
-        data:[{xAxis:DATES.indexOf(selDep)},{yAxis:DATES.indexOf(selBack)}]}}],
+        formatter:p=>p.value[2]}}],   // color:"auto" 让深格用白字、浅格用深字，白底版才不会糊
   }, true);
   document.getElementById("matrixKey").innerHTML = SWATCH(
-      `<span class="ql" style="margin-left:6px">¥${fmt(lo)} → ¥${fmt(hi)}</span>`
-    + `<span style="margin-left:auto">黑线交叉＝06 选定组合</span>`)
+      `<span class="ql" style="margin-left:6px">¥${fmt(lo)} → ¥${fmt(hi)}</span>`)
     + (narrow? `<span class="ql" style="flex:1 1 100%">横＝去程日、纵＝返程日（日号）。窄屏隐去格内数字，点格读数。</span>`:``);
 }
 
