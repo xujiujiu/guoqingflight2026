@@ -199,7 +199,11 @@ td.hi{color:var(--accent);font-weight:600}
 
 footer{padding-block:30px 46px;color:var(--muted);font-size:12px;margin-top:44px;border-top:1px solid var(--edge);text-align:center;line-height:1.9}
 footer b{color:var(--ink2);font-weight:600}
-footer p{margin:0;max-width:92ch}
+/* max-width 要靠 margin-inline:auto 才居中：块盒被截窄后，margin:0 会让它贴左，
+   此时 text-align:center 只在这条窄盒内部居中，整块看着仍是偏的。
+   宽度用 em 不用 ch：ch 以「0」为准约 0.5em，中文是 1em，
+   92ch 实际只容得下约 46 个汉字，免责行会被挤到折行。 */
+footer p{margin:0 auto;max-width:60em}
 .fnav{letter-spacing:.02em}
 .fnav a{color:var(--ink2);text-decoration:none}
 .fnav a:hover{color:var(--accent);text-decoration:underline}
@@ -332,7 +336,6 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
   <div class="sech"><span class="secno">05</span><h2>单个城市的 15 天价格走势</h2></div>
   <div class="callout"><span class="lab">本节结论</span>
     <p>比绝对高低更有用的是<b>曲线形状</b>：有的城市节前即达峰，有的国庆中段才最高——形状差异反映该航线是<b>商务线还是旅游线</b>。</p></div>
-  <p class="sub">纵值＝该城当日<b>单程</b>最低价，随 tab 切换去程／返程，两者永不并画。城市按<b>拼音</b>排序：电脑端点标签，手机端可搜索多选。</p>
   <div class="chips" id="chips" role="group" aria-label="选择对比城市"></div>
   <div class="cp" id="cpBox"></div>
   <div class="ctrls" id="calMode" role="group" aria-label="选择价格方向"></div>
@@ -342,7 +345,6 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
 
 <section>
   <div class="sech"><span class="secno">06</span><h2>可达城市全量价格表</h2></div>
-  <p class="sub">按本节日期重算，同时驱动 03 十字线与 07 卡片（02 地图另有独立日期）。空值＝该城该日无报价，不以邻日顶替。</p>
   <div class="ctrls">
     <label>出发 <select id="depSel2" aria-label="表格出发日期"></select></label>
     <label>返回 <select id="backSel2" aria-label="表格返程日期"></select></label>
@@ -359,12 +361,8 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
 </section>
 
 <footer>
-  <p class="fnav"><a href="#top">回到顶部</a><i>·</i><a href="README.md">数据口径</a><i>·</i><a href="DEPLOY.md">部署说明</a></p>
-  <p>制作 <b>xujiujiu</b> · 生成于 <span id="footStamp">—</span></p>
-  <p>© 2026 xujiujiu 保留所有权利</p>
-  <!-- 备案行：国内站点底部惯例。上线前换成真实备案号；没有备案就把整个 .fbeian 段落删掉，
-       切勿留着下面的 X 占位符——那不是可解析的编号，会被当作虚假备案信息。 -->
-  <p class="fbeian">XICP备XXXXXXXX号-1</p>
+  <p class="fnav"><a href="#top">回到顶部</a></p>
+  <p>© 2026 xujiujiu 20260924</p>
   <p class="fdisclaim">本页价格为公开接口取数后的快照，仅供参考，不构成购票建议；机票随库存实时变动，请以航司与售票平台实际报价为准。</p>
 </footer>
 
