@@ -304,7 +304,6 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
   <div class="sech"><span class="secno">02</span><h2>可达城市地图：哪儿贵、哪儿便宜</h2></div>
   <div class="callout"><span class="lab">本节结论</span>
     <p>价格本质是里程的函数，色带呈以杭州为圆心的<b>同心扩散</b>。有信息量的是<b>偏离这个梯度</b>的城市——同距离却明显更贵，意味着绕行或航线稀缺。</p></div>
-  <p class="sub">底色为地级单元，圆点为各城机场坐标；颜色＝下方所选日期的<b>往返总价</b>，浅→深＝便宜→贵。这组日期只驱动本图。</p>
   <div class="ctrls">
     <label>出发 <select id="depSel" aria-label="地图出发日期"></select></label>
     <label>返回 <select id="backSel" aria-label="地图返程日期"></select></label>
@@ -317,8 +316,7 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
 <section>
   <div class="sech"><span class="secno">03</span><h2>去程日 × 返程日：全国中位往返价矩阵</h2></div>
   <div class="callout"><span class="lab">本节结论</span>
-    <p>把这张表当成<b>选日期工具</b>用：横选出发日、纵选返回日，交叉格即该组合下的全国截尾中位往返价。国庆中段出发普遍低于节前与节末。</p></div>
-  <p class="sub">每格＝该「去程日 × 返程日」组合下全国城市的<b>往返价中位数</b>。只有左上三角是合法域，颜色<b>越深越贵</b>。</p>
+    <p>把这张表当成<b>选日期工具</b>用：横选出发日、纵选返回日，交叉格即该组合下的全国截尾中位往返价。<b>国庆中段出发普遍低于节前与节末。</b></p></div>
   <div class="card"><div id="matrix" class="chart tall"></div><div class="key" id="matrixKey"></div></div>
   <p class="note" id="matrixNote"></p>
 </section>
@@ -327,7 +325,6 @@ code{font-family:var(--mono);font-size:11.5px;background:var(--chip);color:var(-
   <div class="sech"><span class="secno">04</span><h2>全国中位价随日期变化</h2></div>
   <div class="callout"><span class="lab">本节结论</span>
     <p>返程线整体压在去程线之上——<b>回程才是假期的价格瓶颈</b>。同一趟行程，能调整返程日比调整出发日省得多。</p></div>
-  <p class="sub">蓝线＝该日杭州飞出的全国中位<b>单程</b>价，绿线＝飞回杭州；底色为法定假期。不画合计线（那是两线相加的派生量），往返总价见 02、03。</p>
   <div class="card"><div id="dateCurve" class="chart"></div></div>
   <p class="note" id="dateNote"></p>
 </section>
@@ -691,8 +688,6 @@ function matrix(){
       `<span class="ql" style="margin-left:6px">¥${fmt(lo)} → ¥${fmt(hi)}</span>`
     + `<span style="margin-left:auto">黑线交叉＝06 选定组合</span>`)
     + (narrow? `<span class="ql" style="flex:1 1 100%">横＝去程日、纵＝返程日（日号）。窄屏隐去格内数字，点格读数。</span>`:``);
-  document.getElementById("matrixNote").innerHTML =
-    `右下三角留空＝返程早于出发的非法组合；对角线是当日往返，参考意义不大。` + (window.__MATRIX_READ__||``);
 }
 
 /* ── 全国中位价随日期变化：三条线各自铺满 15 天，均为截尾中位 ── */
@@ -890,9 +885,6 @@ function cityCal(){
   }, true);
   const mb=document.getElementById("calMode");
   if(mb)[...mb.children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.m===calMode?"true":"false"));
-  document.getElementById("cityNote").innerHTML =
-    `读的是${calMode==="out"?"杭州→该城":"该城→杭州"}<b>单程价</b>，非往返合计；最多同画 ${MAXP} 城`
-    + (skipped>0? `，${skipped} 城无该方向日历未画` : ``) + `。`;
 }
 
 /* ── 表格：只看往返总价时收起出发/返程两列；无状态列 ── */
@@ -917,9 +909,6 @@ function table(){
         +`<td class="num${isHi(v)?" hi":""}" style="font-weight:600">${v!=null?"¥"+v.toFixed(0):"—"}</td></tr>`;
     }).join("")+`</tbody>`;
   const n=rows.filter(x=>x.v!=null).length;
-  document.getElementById("tblNote").innerHTML= only
-    ? `仅列 ${selDep}→${selBack} 去返两日均有报价的 <b>${n}</b> 城，去／返两列已收起。`
-    : `<b>${n}</b> 城有往返总价，${rows.length-n} 城该组合无报价。`;
 }
 
 /* ── 地图 ── */
@@ -947,9 +936,6 @@ function fmap(){
   key.innerHTML = SWATCH(
       `<span class="ql" style="margin-left:6px">¥${fmt(r.lo)} → ¥${fmt(r.hi)}<span style="color:var(--muted)">（浅→深＝便宜→贵）</span></span>`
     + `<span class="nd" style="margin-left:auto"></span><span>无直飞报价</span>`);
-  note.innerHTML =
-    `本组合有报价 <b>${r.cities}</b> 城（同城多机场已归并，去重 ${r.dedup} 条），其中 ${r.polys} 城匹配到地级多边形着色，其余以气泡落位。`
-    + (r.unmapped? ` <b>${r.unmapped}</b> 城名未映射为中文，暂以拼音原样显示。` : ``);
 }
 
 /* ── 控件与初始化 ──
